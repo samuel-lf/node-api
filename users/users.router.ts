@@ -1,11 +1,12 @@
 import { User } from './users.model';
 import { Router } from "../common/router";
 import * as restify from "restify";
-import { exec } from 'child_process';
+import { NotFoundError } from 'restify-errors';
+
 
 class UsersRouter extends Router {
 
-    constructor(){
+    constructor() {
         super()
         this.on('beforeRender', document => {
             document.password = undefined;
@@ -16,7 +17,7 @@ class UsersRouter extends Router {
     applyRoutes(application: restify.Server) {
 
         application.get('/users', (req, res, next) => {
-            User.find().then(this.render(res, next));
+            User.find().then(this.render(res, next)).catch(next)
         })
 
         application.get('/users/:id', (req, res, next) => {
@@ -26,27 +27,27 @@ class UsersRouter extends Router {
 
         application.post('/users/', (req, res, next) => {
             let user = new User(req.body);
-            user.save().then(this.render(res, next))
+            user.save().then(this.render(res, next)).catch(next)
         });
 
         application.put('/users/:id', (req, res, next) => {
             const id = req.params.id;
-            const options = { overwrite: true }
+            const options = { runValidators: true, overwrite: true }
             User.update({ _id: id }, req.body, options)
                 .exec().then((result) => {
                     if (result.n) {
                         return User.findById(id).exec()
                     } else {
-                        res.send(404)
+                        throw new NotFoundError('Documento não encontrado')
                     }
-                }).then(this.render(res, next))
+                }).then(this.render(res, next)).catch(next)
         });
 
         application.patch('/users/:id', (req, res, next) => {
             const id = req.params.id;
-            const options = { new: true }
+            const options = { runValidators: true, new: true }
             User.findByIdAndUpdate({ _id: id }, req.body, options)
-                .exec().then(this.render(res, next))
+                .exec().then(this.render(res, next)).catch(next)
         });
 
         application.del('/users/:id', (req, res, next) => {
@@ -57,10 +58,9 @@ class UsersRouter extends Router {
                         res.send(204)
                         return next();
                     } else {
-                        res.send(404)
-                        return next();
+                        throw new NotFoundError('Documento não encontrado')
                     }
-                })
+                }).catch(next)
         });
 
     }
