@@ -1,5 +1,4 @@
 import { User } from './users.model';
-import { Router } from "../common/router";
 import * as restify from "restify";
 import { ModelRouter } from '../common/model-router';
 
