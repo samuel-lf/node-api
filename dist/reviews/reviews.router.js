@@ -10,11 +10,17 @@ class ReviewsRouter extends model_router_1.ModelRouter {
         return query.populate('user', 'name')
             .populate('restaurant');
     }
+    envelope(document) {
+        let resource = super.envelope(document);
+        const restaurantId = document.restaurant._id ? document.restaurant._id : document.restaurant;
+        resource._links.restaurant = `/restaurants/${restaurantId}`;
+        return resource;
+    }
     applyRoutes(application) {
-        application.get('/reviews', this.findAll);
-        application.get('/reviews/:id', [this.validateId, this.findById]);
-        application.post('/reviews/', this.save);
-        application.del('/reviews/:id', [this.validateId, this.delete]);
+        application.get(`${this.basePath}`, this.findAll);
+        application.get(`${this.basePath}/:id`, [this.validateId, this.findById]);
+        application.post(`${this.basePath}/`, this.save);
+        application.del(`${this.basePath}/:id`, [this.validateId, this.delete]);
     }
 }
 exports.reviewsRouter = new ReviewsRouter();
